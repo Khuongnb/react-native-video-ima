@@ -5,6 +5,7 @@
 #import "RCTVideoPlayerViewControllerDelegate.h"
 #import <React/RCTComponent.h>
 #import <React/RCTBridgeModule.h>
+#import "IMAAds.h"
 
 #if __has_include(<react-native-video/RCTVideoCache.h>)
 #import <react-native-video/RCTVideoCache.h>
@@ -12,6 +13,7 @@
 #import <DVAssetLoaderDelegate/DVAssetLoaderDelegate.h>
 #endif
 
+@class IMAAds;
 @class RCTEventDispatcher;
 #if __has_include(<react-native-video/RCTVideoCache.h>)
 @interface RCTVideo : UIView <RCTVideoPlayerViewControllerDelegate, DVAssetLoaderDelegatesDelegate>
@@ -43,10 +45,12 @@
 @property (nonatomic, copy) RCTDirectEventBlock onPictureInPictureStatusChanged;
 @property (nonatomic, copy) RCTDirectEventBlock onRestoreUserInterfaceForPictureInPictureStop;
 
+@property (nonatomic, copy) RCTDirectEventBlock onAdEvent;
+
 - (instancetype)initWithEventDispatcher:(RCTEventDispatcher *)eventDispatcher NS_DESIGNATED_INITIALIZER;
 
 - (AVPlayerViewController*)createPlayerViewController:(AVPlayer*)player withPlayerItem:(AVPlayerItem*)playerItem;
 
 - (void)save:(NSDictionary *)options resolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject;
-
+- (IMAAds*)getAdsInstance;
 @end

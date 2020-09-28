@@ -5,6 +5,7 @@ import resolveAssetSource from 'react-native/Libraries/Image/resolveAssetSource'
 import TextTrackType from './TextTrackType';
 import FilterType from './FilterType';
 import VideoResizeMode from './VideoResizeMode.js';
+import {AdAction, AdEventType} from './types'
 
 const styles = StyleSheet.create({
   base: {
@@ -12,7 +13,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export { TextTrackType, FilterType };
+export { TextTrackType, FilterType, AdAction, AdEventType };
 
 export default class Video extends Component {
 
@@ -31,13 +32,13 @@ export default class Video extends Component {
   toTypeString(x) {
     switch (typeof x) {
       case "object":
-        return x instanceof Date 
-          ? x.toISOString() 
+        return x instanceof Date
+          ? x.toISOString()
           : JSON.stringify(x); // object, null
       case "undefined":
         return "";
       default: // boolean, number, string
-        return x.toString();      
+        return x.toString();
     }
   }
 
@@ -124,7 +125,7 @@ export default class Video extends Component {
     if (this.props.onBandwidthUpdate) {
       this.props.onBandwidthUpdate(event.nativeEvent);
     }
-  };  
+  };
 
   _onSeek = (event) => {
     if (this.props.onSeek) {
@@ -235,7 +236,21 @@ export default class Video extends Component {
     }
     return NativeModules.UIManager.getViewManagerConfig(viewManagerName);
   };
-
+  
+  _onAdEvent = (event) => {
+    if (this.props.onAdEvent) {
+      this.props.onAdEvent(event.nativeEvent);
+    }
+  }
+  
+  dispatch = (action, payload) => {
+    if (Platform.OS === 'android') {
+      NativeModules.UIManager.dispatchViewManagerCommand(findNodeHandle(this._root), 0, [action, payload]);
+    } else {
+      NativeModules.VideoManager.dispatch(action, payload);
+    }
+  }
+  
   render() {
     const resizeMode = this.props.resizeMode;
     const source = resolveAssetSource(this.props.source) || {};
@@ -303,6 +318,7 @@ export default class Video extends Component {
       onAudioBecomingNoisy: this._onAudioBecomingNoisy,
       onPictureInPictureStatusChanged: this._onPictureInPictureStatusChanged,
       onRestoreUserInterfaceForPictureInPictureStop: this._onRestoreUserInterfaceForPictureInPictureStop,
+      onAdEvent: this._onAdEvent
     });
 
     const posterStyle = {
@@ -396,7 +412,7 @@ Video.propTypes = {
       PropTypes.string,
       PropTypes.number
     ])
-  }),  
+  }),
   selectedTextTrack: PropTypes.shape({
     type: PropTypes.string.isRequired,
     value: PropTypes.oneOfType([
@@ -462,6 +478,7 @@ Video.propTypes = {
   onPictureInPictureStatusChanged: PropTypes.func,
   needsToRestoreUserInterfaceForPictureInPictureStop: PropTypes.func,
   onExternalPlaybackChange: PropTypes.func,
+  onAdEvent: PropTypes.func,
 
   /* Required by react-native */
   scaleX: PropTypes.number,

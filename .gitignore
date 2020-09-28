@@ -46,3 +46,10 @@ buck-out/
 \.buckd/
 android/app/libs
 android/keystores/debug.keystore
+
+/ios/Pods/*
+*.xcworkspace
+/android-exoplayer/gradle/*
+/android-exoplayer/gradlew
+/android-exoplayer/gradlew.bat
+/ios/Podfile

@@ -5,6 +5,7 @@
 #import <React/UIView+React.h>
 #include <MediaAccessibility/MediaAccessibility.h>
 #include <AVFoundation/AVFoundation.h>
+#import "IMAAds.h"
 
 static NSString *const statusKeyPath = @"status";
 static NSString *const playbackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
@@ -74,6 +75,7 @@ static int const RCTVideoUnset = -1;
   NSString *_filterName;
   BOOL _filterEnabled;
   UIViewController * _presentingViewController;
+  IMAAds *_ads;
 #if __has_include(<react-native-video/RCTVideoCache.h>)
   RCTVideoCache * _videoCache;
 #endif
@@ -135,6 +137,10 @@ static int const RCTVideoUnset = -1;
   }
   
   return self;
+}
+
+- (IMAAds *)getAdsInstance {
+    return _ads;
 }
 
 - (RCTVideoPlayerViewController*)createPlayerViewController:(AVPlayer*)player
@@ -376,7 +382,13 @@ static int const RCTVideoUnset = -1;
       _isExternalPlaybackActiveObserverRegistered = YES;
         
       [self addPlayerTimeObserver];
-
+        
+      _ads = [[IMAAds alloc] initWithSettings:nil
+                                       player:_player
+                                   playerView:self
+                             adViewController:[self firstAvailableUIViewController]];
+      _ads.onAdEvent = self.onAdEvent;
+        
       //Perform on next run loop, otherwise onVideoLoadStart is nil
       if (self.onVideoLoadStart) {
         id uri = [source objectForKey:@"uri"];
@@ -767,6 +779,9 @@ static int const RCTVideoUnset = -1;
 
 - (void)playerItemDidReachEnd:(NSNotification *)notification
 {
+    if(_ads) {
+        [_ads dispatch:@"CONTENT_COMPLETE" payload:nil];
+    }
   if(self.onVideoEnd) {
     self.onVideoEnd(@{@"target": self.reactTag});
   }

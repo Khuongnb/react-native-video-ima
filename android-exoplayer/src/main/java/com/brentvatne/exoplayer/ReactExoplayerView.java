@@ -10,6 +10,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
@@ -74,6 +75,9 @@ import java.util.Map;
 import java.lang.Object;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.concurrent.Callable;
+
+import com.brentvatne.exoplayer.ImaAdsFactory;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -152,6 +156,11 @@ class ReactExoplayerView extends FrameLayout implements
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
 
+    // IMA SDK
+    private ImaAdsFactory _adsFactory;
+    private ViewGroup adUiContainer;
+    private MediaSource _playerMediaSource;
+
     private final Handler progressHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -184,9 +193,31 @@ class ReactExoplayerView extends FrameLayout implements
         themedReactContext.addLifecycleEventListener(this);
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(themedReactContext);
 
+        _adsFactory = new ImaAdsFactory(themedReactContext, adUiContainer, this, eventEmitter);
         initializePlayer();
     }
 
+    public ImaAdsFactory getAdsFactory() {
+        return _adsFactory;
+    }
+
+    private void requestAds() {
+        String ads = "https://pubads.g.doubleclick.net/gampad/ads?sz=640x480&iu=/124319096/external/ad_rule_samples&ciu_szs=300x250&ad_rule=1&impl=s&gdfp_req=1&env=vp&output=vmap&unviewed_position_start=1&cust_params=deployment%3Ddevsite%26sample_ar%3Dpremidpost&cmsid=496&vid=short_onecue&correlator=";
+        _adsFactory.requestAdsAndStart(ads);
+    }
+
+    @Override
+    public void requestLayout() {
+        super.requestLayout();
+        post(measureAndLayout);
+    }
+
+    private final Runnable measureAndLayout = () -> {
+        measure(
+                MeasureSpec.makeMeasureSpec(getWidth(), MeasureSpec.EXACTLY),
+                MeasureSpec.makeMeasureSpec(getHeight(), MeasureSpec.EXACTLY));
+        layout(getLeft(), getTop(), getRight(), getBottom());
+    };
 
     @Override
     public void setId(int id) {
@@ -208,7 +239,11 @@ class ReactExoplayerView extends FrameLayout implements
         exoPlayerView = new ExoPlayerView(getContext());
         exoPlayerView.setLayoutParams(layoutParams);
 
+        adUiContainer = new FrameLayout(getContext());
+        adUiContainer.setLayoutParams(layoutParams);
+
         addView(exoPlayerView, 0, layoutParams);
+        addView(adUiContainer, 1, layoutParams);
     }
 
     @Override
@@ -295,6 +330,7 @@ class ReactExoplayerView extends FrameLayout implements
             @Override
             public void onClick(View v) {
                 togglePlayerControlVisibility();
+                requestAds();
             }
         });
 
@@ -323,7 +359,7 @@ class ReactExoplayerView extends FrameLayout implements
         if (indexOfPC != -1) {
             removeViewAt(indexOfPC);
         }
-        addView(playerControlView, 1, layoutParams);
+        addView(playerControlView, 2, layoutParams);
     }
 
     /**
@@ -383,12 +419,20 @@ class ReactExoplayerView extends FrameLayout implements
                     if (haveResumePosition) {
                         player.seekTo(resumeWindow, resumePosition);
                     }
+                    _playerMediaSource = mediaSource;
                     player.prepare(mediaSource, !haveResumePosition, false);
                     playerNeedsSource = false;
 
                     eventEmitter.loadStart();
                     loadVideoStarted = true;
                 }
+
+                _adsFactory.setPlayer(
+                        player,
+                        self,
+                        () -> buildMediaSource(_adsFactory.getAdUri(), ""),
+                        _playerMediaSource
+                );
 
                 // Initializing the playerControlView
                 initializePlayerControl();
@@ -625,6 +669,9 @@ class ReactExoplayerView extends FrameLayout implements
                 text += "ended";
                 eventEmitter.end();
                 onStopPlayback();
+                if (_adsFactory != null) {
+                    _adsFactory.dispatch("CONTENT_COMPLETE", null);
+                }
                 break;
             default:
                 text += "unknown";
@@ -1059,7 +1106,7 @@ class ReactExoplayerView extends FrameLayout implements
 
     public void setPausedModifier(boolean paused) {
         isPaused = paused;
-        if (player != null) {
+        if (player != null && !_adsFactory.getIsAdDisplaying()) {
             if (!paused) {
                 startPlayback();
             } else {

@@ -1,10 +1,10 @@
 {
-    "name": "react-native-video",
+    "name": "react-native-video-ima",
     "version": "4.4.5",
-    "description": "A <Video /> element for react-native",
+    "description": "A <Video /> with google interactive ads element for react-native",
     "main": "Video.js",
     "license": "MIT",
-    "author": "Brent Vatne <brentvatne@gmail.com> (https://github.com/brentvatne)",
+    "author": "Youthdev Inc. ft Brent Vatne <brentvatne@gmail.com> (https://github.com/brentvatne)",
     "contributors": [
         {
             "name": "Isaiah Grey",
@@ -59,6 +59,7 @@
         "FilterType.js",
         "TextTrackType.js",
         "VideoResizeMode.js",
-        "react-native-video.podspec"
+        "react-native-video-ima.podspec",
+        "types.js"
     ]
 }

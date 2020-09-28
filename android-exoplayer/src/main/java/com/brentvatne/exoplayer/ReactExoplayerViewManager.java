@@ -16,7 +16,9 @@ import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerView> {
@@ -59,6 +61,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+    private static final int DISPATCH = 0;
+
 
     @Override
     public String getName() {
@@ -92,6 +96,14 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                 "ScaleToFill", Integer.toString(ResizeMode.RESIZE_MODE_FILL),
                 "ScaleAspectFill", Integer.toString(ResizeMode.RESIZE_MODE_CENTER_CROP)
         );
+    }
+
+    @Override
+    public void receiveCommand(@Nonnull ReactExoplayerView root, int commandId, @Nullable ReadableArray args) {
+        super.receiveCommand(root, commandId, args);
+        if (commandId == DISPATCH && args != null) {
+            root.getAdsFactory().dispatch(Objects.requireNonNull(args.getString(0)), args.getDynamic(1));
+        }
     }
 
     @ReactProp(name = PROP_SRC)

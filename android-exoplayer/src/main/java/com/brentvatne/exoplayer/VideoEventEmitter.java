@@ -48,6 +48,8 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
 
+    private static final String EVENT_AD_EVENT = "onAdEvent";
+
     static final String[] Events = {
             EVENT_LOAD_START,
             EVENT_LOAD,
@@ -69,6 +71,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_AD_EVENT
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -93,6 +96,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_AD_EVENT
     })
     @interface VideoEvents {
     }
@@ -135,6 +139,12 @@ class VideoEventEmitter {
 
     void loadStart() {
         receiveEvent(EVENT_LOAD_START, null);
+    }
+
+    void adEvent(String event) {
+        WritableMap wm = Arguments.createMap();
+        wm.putString("type", event);
+        receiveEvent(EVENT_AD_EVENT, wm);
     }
 
     void load(double duration, double currentPosition, int videoWidth, int videoHeight,

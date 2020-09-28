@@ -4,13 +4,18 @@
 #import <React/RCTUIManager.h>
 #import <AVFoundation/AVFoundation.h>
 
-@implementation RCTVideoManager
+@implementation RCTVideoManager {
+    RCTVideo* _rctVideo;
+    IMAAds* _kIMAAds;
+}
 
 RCT_EXPORT_MODULE();
 
 - (UIView *)view
 {
-  return [[RCTVideo alloc] initWithEventDispatcher:self.bridge.eventDispatcher];
+    _rctVideo = [[RCTVideo alloc] initWithEventDispatcher:self.bridge.eventDispatcher];
+    _kIMAAds = [_rctVideo getAdsInstance];
+    return _rctVideo;
 }
 
 - (dispatch_queue_t)methodQueue
@@ -64,6 +69,7 @@ RCT_EXPORT_VIEW_PROPERTY(onPlaybackStalled, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlaybackResume, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onPlaybackRateChange, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onVideoExternalPlaybackChange, RCTDirectEventBlock);
+RCT_EXPORT_VIEW_PROPERTY(onAdEvent, RCTDirectEventBlock);
 RCT_REMAP_METHOD(save,
         options:(NSDictionary *)options
         reactTag:(nonnull NSNumber *)reactTag
@@ -81,6 +87,13 @@ RCT_REMAP_METHOD(save,
 }
 RCT_EXPORT_VIEW_PROPERTY(onPictureInPictureStatusChanged, RCTDirectEventBlock);
 RCT_EXPORT_VIEW_PROPERTY(onRestoreUserInterfaceForPictureInPictureStop, RCTDirectEventBlock);
+
+RCT_EXPORT_METHOD(dispatch:(NSString*)event payload:(id)payload){
+    if (!_kIMAAds)
+        _kIMAAds = [_rctVideo getAdsInstance];
+    if (_kIMAAds)
+        [_kIMAAds dispatch:event payload:payload];
+}
 
 - (NSDictionary *)constantsToExport
 {
