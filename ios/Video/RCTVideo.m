@@ -6,6 +6,8 @@
 #include <MediaAccessibility/MediaAccessibility.h>
 #include <AVFoundation/AVFoundation.h>
 #import "IMAAds.h"
+#import "MuxTracking.h"
+@import MUXSDKStats;
 
 static NSString *const statusKeyPath = @"status";
 static NSString *const playbackLikelyToKeepUpKeyPath = @"playbackLikelyToKeepUp";
@@ -88,6 +90,7 @@ static int const RCTVideoUnset = -1;
     
   /* ADS */
   IMAAds *_ads;
+  MuxTracking *muxTracker;
 
 #if __has_include(<react-native-video/RCTVideoCache.h>)
   RCTVideoCache * _videoCache;
@@ -981,6 +984,11 @@ static int const RCTVideoUnset = -1;
   [self setSeek:info];
 }
 
+- (void)setMuxConfig:(NSDictionary *)config
+{
+    muxTracker = [[MuxTracking alloc] initWithConfig:config];
+}
+
 - (void)setSeek:(NSDictionary *)info
 {
   NSNumber *seekTime = info[@"time"];
@@ -1462,6 +1470,9 @@ static int const RCTVideoUnset = -1;
     
     [self.layer addSublayer:_playerLayer];
     self.layer.needsDisplayOnBoundsChange = YES;
+      
+    [muxTracker startTracking:_playerLayer];
+      
     #if TARGET_OS_IOS
     [self setupPipController];
     #endif
