@@ -5,6 +5,8 @@ import android.net.Uri;
 import android.text.TextUtils;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.facebook.react.bridge.Dynamic;
 import com.facebook.react.bridge.ReadableArray;
 import com.facebook.react.bridge.ReadableMap;
@@ -21,6 +23,7 @@ import com.google.android.exoplayer2.upstream.RawResourceDataSource;
 import java.util.HashMap;
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -70,6 +73,8 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_SELECTED_VIDEO_TRACK_VALUE = "value";
     private static final String PROP_HIDE_SHUTTER_VIEW = "hideShutterView";
     private static final String PROP_CONTROLS = "controls";
+    private static final String PROP_MUX_CONFIG = "muxConfig";
+    private static final int DISPATCH = 0;
 
     private ReactExoplayerConfig config;
 
@@ -109,6 +114,19 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
                 "ScaleToFill", Integer.toString(ResizeMode.RESIZE_MODE_FILL),
                 "ScaleAspectFill", Integer.toString(ResizeMode.RESIZE_MODE_CENTER_CROP)
         );
+    }
+
+    @Override
+    public void receiveCommand(@NonNull ReactExoplayerView root, int commandId, @Nullable ReadableArray args) {
+        super.receiveCommand(root, commandId, args);
+        if (commandId == DISPATCH && args != null) {
+            root.getAdsFactory().dispatch(Objects.requireNonNull(args.getString(0)), args.getDynamic(1));
+        }
+    }
+
+    @ReactProp(name = PROP_MUX_CONFIG)
+    public void setMuxConfig(final ReactExoplayerView videoView, @Nullable ReadableMap config) {
+        videoView.setMuxConfig(config);
     }
 
     @ReactProp(name = PROP_DRM)

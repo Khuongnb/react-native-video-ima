@@ -10,6 +10,7 @@ import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
@@ -79,6 +80,9 @@ import java.util.ArrayList;
 import java.util.Locale;
 import java.util.UUID;
 import java.util.Map;
+
+import com.brentvatne.exoplayer.ImaAdsFactory;
+import com.brentvatne.exoplayer.MuxTracking;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -164,6 +168,15 @@ class ReactExoplayerView extends FrameLayout implements
     private final AudioManager audioManager;
     private final AudioBecomingNoisyReceiver audioBecomingNoisyReceiver;
 
+    // IMA SDK
+    private ImaAdsFactory _adsFactory;
+    private ViewGroup adUiContainer;
+    private MediaSource _playerMediaSource;
+
+    // MUX data
+    private ReadableMap muxConfig;
+    private MuxTracking muxTracking;
+
     private final Handler progressHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -204,8 +217,14 @@ class ReactExoplayerView extends FrameLayout implements
         audioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         themedReactContext.addLifecycleEventListener(this);
         audioBecomingNoisyReceiver = new AudioBecomingNoisyReceiver(themedReactContext);
+
+        _adsFactory = new ImaAdsFactory(themedReactContext, adUiContainer, this, eventEmitter);
+        muxTracking = new MuxTracking(themedReactContext);
     }
 
+    public ImaAdsFactory getAdsFactory() {
+        return _adsFactory;
+    }
 
     @Override
     public void setId(int id) {
@@ -226,7 +245,11 @@ class ReactExoplayerView extends FrameLayout implements
         exoPlayerView = new ExoPlayerView(getContext());
         exoPlayerView.setLayoutParams(layoutParams);
 
+        adUiContainer = new FrameLayout(getContext());
+        adUiContainer.setLayoutParams(layoutParams);
+
         addView(exoPlayerView, 0, layoutParams);
+        addView(adUiContainer, 1, layoutParams);
 
         mainHandler = new Handler();
     }
@@ -411,7 +434,7 @@ class ReactExoplayerView extends FrameLayout implements
                             new DefaultRenderersFactory(getContext())
                                     .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF);
                     player = new SimpleExoPlayer.Builder(getContext(), renderersFactory)
-                                .setTrackSelector​(trackSelector)
+                                .setTrackSelector(trackSelector)
                                 .setBandwidthMeter(bandwidthMeter)
                                 .setLoadControl(defaultLoadControl)
                                 .build();
@@ -468,7 +491,18 @@ class ReactExoplayerView extends FrameLayout implements
                     reLayout(exoPlayerView);
                     eventEmitter.loadStart();
                     loadVideoStarted = true;
+                    _playerMediaSource = mediaSource;
+                    if (muxConfig != null) {
+                        muxTracking.track(player, muxConfig);
+                    }
                 }
+
+                _adsFactory.setPlayer(
+                        player,
+                        self,
+                        () -> buildMediaSource(_adsFactory.getAdUri(), "", null),
+                        _playerMediaSource
+                );
 
                 // Initializing the playerControlView
                 initializePlayerControl();
@@ -498,6 +532,7 @@ class ReactExoplayerView extends FrameLayout implements
     private MediaSource buildMediaSource(Uri uri, String overrideExtension, DrmSessionManager drmSessionManager) {
         int type = Util.inferContentType(!TextUtils.isEmpty(overrideExtension) ? "." + overrideExtension
                 : uri.getLastPathSegment());
+        muxTracking.setStreamType(type);
         switch (type) {
             case C.TYPE_SS:
                 return new SsMediaSource.Factory(
@@ -570,6 +605,10 @@ class ReactExoplayerView extends FrameLayout implements
             trackSelector = null;
             player = null;
         }
+        if (_adsFactory != null) {
+            _adsFactory.release();
+        }
+        muxTracking.release();
         progressHandler.removeMessages(SHOW_PROGRESS);
         themedReactContext.removeLifecycleEventListener(this);
         audioBecomingNoisyReceiver.removeListener();
@@ -767,6 +806,9 @@ class ReactExoplayerView extends FrameLayout implements
                 text += "ended";
                 eventEmitter.end();
                 onStopPlayback();
+                if (_adsFactory != null) {
+                    _adsFactory.dispatch("CONTENT_COMPLETE", null);
+                }
                 setKeepScreenOn(false);
                 break;
             default:
@@ -1010,6 +1052,10 @@ class ReactExoplayerView extends FrameLayout implements
     }
 
     // ReactExoplayerViewManager public api
+
+    public void setMuxConfig(ReadableMap mConfig) {
+        muxConfig = mConfig;
+    }
 
     public void setSrc(final Uri uri, final String extension, Map<String, String> headers) {
         if (uri != null) {

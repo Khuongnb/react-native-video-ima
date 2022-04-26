@@ -47,6 +47,8 @@ class VideoEventEmitter {
     private static final String EVENT_AUDIO_BECOMING_NOISY = "onVideoAudioBecomingNoisy";
     private static final String EVENT_AUDIO_FOCUS_CHANGE = "onAudioFocusChanged";
     private static final String EVENT_PLAYBACK_RATE_CHANGE = "onPlaybackRateChange";
+    private static final String EVENT_AD_EVENT = "onAdEvent";
+
 
     static final String[] Events = {
             EVENT_LOAD_START,
@@ -69,6 +71,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_AD_EVENT,
     };
 
     @Retention(RetentionPolicy.SOURCE)
@@ -93,6 +96,7 @@ class VideoEventEmitter {
             EVENT_AUDIO_FOCUS_CHANGE,
             EVENT_PLAYBACK_RATE_CHANGE,
             EVENT_BANDWIDTH,
+            EVENT_AD_EVENT,
     })
     @interface VideoEvents {
     }
@@ -128,7 +132,8 @@ class VideoEventEmitter {
 
     private static final String EVENT_PROP_TIMED_METADATA = "metadata";
 
-    private static final String EVENT_PROP_BITRATE = "bitrate";   
+    private static final String EVENT_PROP_BITRATE = "bitrate";
+
 
 
     void setViewId(int viewId) {
@@ -170,6 +175,20 @@ class VideoEventEmitter {
 
         receiveEvent(EVENT_LOAD, event);
     }
+
+    void adEvent(String event) {
+        WritableMap wm = Arguments.createMap();
+        wm.putString("type", event);
+        receiveEvent(EVENT_AD_EVENT, wm);
+    }
+
+    void adEvent(String event, WritableMap adPod) {
+        WritableMap wm = Arguments.createMap();
+        wm.putString("type", event);
+        wm.putMap("data", adPod);
+        receiveEvent(EVENT_AD_EVENT, wm);
+    }
+
 
     void progressChanged(double currentPosition, double bufferedDuration, double seekableDuration, double currentPlaybackTime) {
         WritableMap event = Arguments.createMap();

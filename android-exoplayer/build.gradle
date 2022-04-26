@@ -28,7 +28,7 @@ android {
 
 dependencies {
     implementation "com.facebook.react:react-native:${safeExtGet('reactNativeVersion', '+')}"
-    implementation('com.google.android.exoplayer:exoplayer:2.13.2') {
+    implementation('com.google.android.exoplayer:exoplayer:2.13.3') {
         exclude group: 'com.android.support'
     }
 
@@ -37,9 +37,17 @@ dependencies {
     implementation "androidx.core:core:1.1.0"
     implementation "androidx.media:media:1.1.0"
 
-    implementation('com.google.android.exoplayer:extension-okhttp:2.13.2') {
+    implementation('com.google.android.exoplayer:extension-okhttp:2.13.3') {
         exclude group: 'com.squareup.okhttp3', module: 'okhttp'
     }
     implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
 
+    // Ads
+    implementation "com.google.ads.interactivemedia.v3:interactivemedia:3.14.0"
+    implementation('com.google.android.gms:play-services-ads:15.0.1') {
+        exclude group: 'com.android.support'
+    }
+
+    // Mux
+    api 'com.mux.stats.sdk.muxstats:MuxExoPlayer_r2_13_1:2.6.0'
 }
