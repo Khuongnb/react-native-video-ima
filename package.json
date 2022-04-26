@@ -1,10 +1,10 @@
 {
-    "name": "react-native-video",
+    "name": "react-native-video-ima",
     "version": "5.2.0",
-    "description": "A <Video /> element for react-native",
+    "description": "A <Video /> element with IMA SDK for react-native",
     "main": "Video.js",
     "license": "MIT",
-    "author": "Brent Vatne <brentvatne@gmail.com> (https://github.com/brentvatne)",
+    "author": "YouthDev Inc. ft Brent Vatne <brentvatne@gmail.com> (https://github.com/brentvatne)",
     "contributors": [
         {
             "name": "Isaiah Grey",
@@ -55,6 +55,6 @@
         "DRMType.js",
         "TextTrackType.js",
         "VideoResizeMode.js",
-        "react-native-video.podspec"
+        "react-native-video-ima.podspec"
     ]
 }

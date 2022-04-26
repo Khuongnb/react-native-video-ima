@@ -3,7 +3,7 @@ require "json"
 package = JSON.parse(File.read(File.join(__dir__, "package.json")))
 
 Pod::Spec.new do |s|
-  s.name           = 'react-native-video'
+  s.name           = 'react-native-video-ima'
   s.version        = package['version']
   s.summary        = package['description']
   s.description    = package['description']
@@ -12,11 +12,11 @@ Pod::Spec.new do |s|
   s.homepage       = 'https://github.com/react-native-community/react-native-video'
   s.source       = { :git => "https://github.com/react-native-community/react-native-video.git", :tag => "#{s.version}" }
 
-  s.ios.deployment_target = "10.0"
-  s.tvos.deployment_target = "10.0"
+  s.ios.deployment_target = "8.0"
+  s.tvos.deployment_target = "9.0"
 
   s.subspec "Video" do |ss|
-    ss.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.15.1"
+    ss.dependency "GoogleAds-IMA-iOS-SDK", "~> 3.12.1"
     ss.dependency "Mux-Stats-AVPlayer", "~>2.0"
     ss.source_files  = "ios/Video/*.{h,m}"
     s.static_framework = true
