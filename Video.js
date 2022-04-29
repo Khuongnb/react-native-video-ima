@@ -6,6 +6,7 @@ import TextTrackType from './TextTrackType';
 import FilterType from './FilterType';
 import DRMType from './DRMType';
 import VideoResizeMode from './VideoResizeMode.js';
+import { AdAction, AdEventType } from "./types"
 
 const styles = StyleSheet.create({
   base: {
@@ -13,7 +14,7 @@ const styles = StyleSheet.create({
   },
 });
 
-export { TextTrackType, FilterType, DRMType };
+export { TextTrackType, FilterType, DRMType, AdAction, AdEventType };
 
 export default class Video extends Component {
 
@@ -23,6 +24,20 @@ export default class Video extends Component {
     this.state = {
       showPoster: !!props.poster,
     };
+  }
+
+  _onAdEvent = (event) => {
+    if (this.props.onAdEvent) {
+      this.props.onAdEvent(event.nativeEvent);
+    }
+  }
+
+  dispatch = (action, payload) => {
+    if (Platform.OS === 'android') {
+      NativeModules.UIManager.dispatchViewManagerCommand(findNodeHandle(this._root), 0, [action, payload]);
+    } else {
+      NativeModules.VideoManager.dispatch(action, payload);
+    }
   }
 
   setNativeProps(nativeProps) {
@@ -304,6 +319,7 @@ export default class Video extends Component {
         patchVer: source.patchVer || 0,
         requestHeaders: source.headers ? this.stringsOnlyObject(source.headers) : {},
       },
+      onAdEvent: this._onAdEvent,
       onVideoLoadStart: this._onLoadStart,
       onVideoLoad: this._onLoad,
       onVideoError: this._onError,
