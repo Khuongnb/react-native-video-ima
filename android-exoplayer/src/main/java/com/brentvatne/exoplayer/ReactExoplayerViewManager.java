@@ -39,6 +39,7 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
     private static final String PROP_DRM_TYPE = "type";
     private static final String PROP_DRM_LICENSESERVER = "licenseServer";
     private static final String PROP_DRM_HEADERS = "headers";
+    private static final String PROP_DRM_TODAY_CONFIG = "drmTodayConfig";
     private static final String PROP_SRC_HEADERS = "requestHeaders";
     private static final String PROP_RESIZE_MODE = "resizeMode";
     private static final String PROP_REPEAT = "repeat";
@@ -135,6 +136,10 @@ public class ReactExoplayerViewManager extends ViewGroupManager<ReactExoplayerVi
             String drmType = drm.hasKey(PROP_DRM_TYPE) ? drm.getString(PROP_DRM_TYPE) : null;
             String drmLicenseServer = drm.hasKey(PROP_DRM_LICENSESERVER) ? drm.getString(PROP_DRM_LICENSESERVER) : null;
             ReadableMap drmHeaders = drm.hasKey(PROP_DRM_HEADERS) ? drm.getMap(PROP_DRM_HEADERS) : null;
+            ReadableMap drmTodayConfig = drm.hasKey(PROP_DRM_TODAY_CONFIG) ? drm.getMap(PROP_DRM_TODAY_CONFIG) : null;
+            if (drmTodayConfig != null) {
+                videoView.setDrmTodayConfig(drmTodayConfig);
+            }
             if (drmType != null && drmLicenseServer != null && Util.getDrmUuid(drmType) != null) {
                 UUID drmUUID = Util.getDrmUuid(drmType);
                 videoView.setDrmType(drmUUID);

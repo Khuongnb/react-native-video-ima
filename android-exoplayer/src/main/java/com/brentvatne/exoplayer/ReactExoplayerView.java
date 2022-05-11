@@ -16,6 +16,8 @@ import android.view.accessibility.CaptioningManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
+import androidx.annotation.Nullable;
+
 import com.brentvatne.react.R;
 import com.brentvatne.receiver.AudioBecomingNoisyReceiver;
 import com.brentvatne.receiver.BecomingNoisyListener;
@@ -43,6 +45,7 @@ import com.google.android.exoplayer2.drm.DrmSessionManager;
 import com.google.android.exoplayer2.drm.FrameworkMediaCrypto;
 import com.google.android.exoplayer2.drm.FrameworkMediaDrm;
 import com.google.android.exoplayer2.drm.HttpMediaDrmCallback;
+import com.google.android.exoplayer2.drm.MediaDrmCallback;
 import com.google.android.exoplayer2.drm.UnsupportedDrmException;
 import com.google.android.exoplayer2.mediacodec.MediaCodecRenderer;
 import com.google.android.exoplayer2.mediacodec.MediaCodecUtil;
@@ -78,11 +81,9 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 import java.util.ArrayList;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.Map;
-
-import com.brentvatne.exoplayer.ImaAdsFactory;
-import com.brentvatne.exoplayer.MuxTracking;
 
 @SuppressLint("ViewConstructor")
 class ReactExoplayerView extends FrameLayout implements
@@ -161,6 +162,7 @@ class ReactExoplayerView extends FrameLayout implements
     private String drmLicenseUrl = null;
     private String[] drmLicenseHeader = null;
     private boolean controls;
+    private ReadableMap drmTodayConfig;
     // \ End props
 
     // React
@@ -512,21 +514,37 @@ class ReactExoplayerView extends FrameLayout implements
         }, 1);
     }
 
-    private DrmSessionManager buildDrmSessionManager(UUID uuid,
-                                                                           String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
+
+    @Nullable
+    private DrmSessionManager buildDrmSessionManager(UUID uuid, String licenseUrl, String[] keyRequestPropertiesArray) throws UnsupportedDrmException {
         if (Util.SDK_INT < 18) {
             return null;
         }
-        HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(licenseUrl,
-                buildHttpDataSourceFactory(false));
-        if (keyRequestPropertiesArray != null) {
-            for (int i = 0; i < keyRequestPropertiesArray.length - 1; i += 2) {
-                drmCallback.setKeyRequestProperty(keyRequestPropertiesArray[i],
-                        keyRequestPropertiesArray[i + 1]);
+        if (licenseUrl.contains("drmtoday.com") && drmTodayConfig != null) {
+            DrmtodayCallback drmCallback = new DrmtodayCallback(
+                    buildHttpDataSourceFactory(false),
+                    drmTodayConfig.getString("drmTodayUrl"),
+                    Objects.requireNonNull(drmTodayConfig.getString("merchant")),
+                    Objects.requireNonNull(drmTodayConfig.getString("userId")),
+                    Objects.requireNonNull(drmTodayConfig.getString("sessionId")),
+                    drmTodayConfig.getString("authToken"),
+                    drmTodayConfig.getString("assetId"),
+                    drmTodayConfig.getString("merchant")
+            );
+            return new DefaultDrmSessionManager(uuid,
+                    FrameworkMediaDrm.newInstance(uuid), drmCallback, null, false, 3);
+        } else {
+            HttpMediaDrmCallback drmCallback = new HttpMediaDrmCallback(licenseUrl,
+                    buildHttpDataSourceFactory(false));
+            if (keyRequestPropertiesArray != null) {
+                for (int i = 0; i < keyRequestPropertiesArray.length - 1; i += 2) {
+                    drmCallback.setKeyRequestProperty(keyRequestPropertiesArray[i],
+                            keyRequestPropertiesArray[i + 1]);
+                }
             }
+            return new DefaultDrmSessionManager(uuid,
+                    FrameworkMediaDrm.newInstance(uuid), drmCallback, null, false, 3);
         }
-        return new DefaultDrmSessionManager(uuid,
-                FrameworkMediaDrm.newInstance(uuid), drmCallback, null, false, 3);
     }
 
     private MediaSource buildMediaSource(Uri uri, String overrideExtension, DrmSessionManager drmSessionManager) {
@@ -1387,6 +1405,10 @@ class ReactExoplayerView extends FrameLayout implements
         bufferForPlaybackAfterRebufferMs = newBufferForPlaybackAfterRebufferMs;
         releasePlayer();
         initializePlayer();
+    }
+
+    public void setDrmTodayConfig(ReadableMap config) {
+        this.drmTodayConfig = config;
     }
 
     public void setDrmType(UUID drmType) {
