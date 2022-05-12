@@ -198,10 +198,10 @@ class ReactExoplayerView extends FrameLayout implements
             }
         }
     };
-    
+
     public double getPositionInFirstPeriodMsForCurrentWindow(long currentPosition) {
         Timeline.Window window = new Timeline.Window();
-        if(!player.getCurrentTimeline().isEmpty()) {    
+        if(!player.getCurrentTimeline().isEmpty()) {
             player.getCurrentTimeline().getWindow(player.getCurrentWindowIndex(), window);
         }
         return window.windowStartTimeMs + currentPosition;
@@ -529,7 +529,7 @@ class ReactExoplayerView extends FrameLayout implements
                     Objects.requireNonNull(drmTodayConfig.getString("sessionId")),
                     drmTodayConfig.getString("authToken"),
                     drmTodayConfig.getString("assetId"),
-                    drmTodayConfig.getString("merchant")
+                    drmTodayConfig.getString("variantId")
             );
             return new DefaultDrmSessionManager(uuid,
                     FrameworkMediaDrm.newInstance(uuid), drmCallback, null, false, 3);
