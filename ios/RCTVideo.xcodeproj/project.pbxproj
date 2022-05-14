@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		61D591D7282FE74C00FDB613 /* MuxTracking.m in Sources */ = {isa = PBXBuildFile; fileRef = 61D591D6282FE74C00FDB613 /* MuxTracking.m */; };
+		61D591D8282FE74C00FDB613 /* MuxTracking.m in Sources */ = {isa = PBXBuildFile; fileRef = 61D591D6282FE74C00FDB613 /* MuxTracking.m */; };
 		61FA205D2808065B0011FC47 /* IMAAds.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FA205A2808065B0011FC47 /* IMAAds.m */; };
-		61FA205E2808065B0011FC47 /* MuxTracking.m in Sources */ = {isa = PBXBuildFile; fileRef = 61FA205C2808065B0011FC47 /* MuxTracking.m */; };
 		764742ED3DAC5FF35CC86EBA /* libPods-RCTVideo.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BED2677642446994E791650E /* libPods-RCTVideo.a */; };
 		D1107C0A2110259000073188 /* UIView+FindUIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1107C032110259000073188 /* UIView+FindUIViewController.m */; };
 		D1107C0B2110259000073188 /* UIView+FindUIViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = D1107C032110259000073188 /* UIView+FindUIViewController.m */; };
@@ -43,10 +44,10 @@
 
 /* Begin PBXFileReference section */
 		134814201AA4EA6300B7C361 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
-		61FA20592808065B0011FC47 /* MuxTracking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MuxTracking.h; path = Video/MuxTracking.h; sourceTree = "<group>"; };
+		61D591D4282FE74C00FDB613 /* MuxTracking.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = MuxTracking.h; path = Video/MuxTracking.h; sourceTree = "<group>"; };
+		61D591D5282FE74C00FDB613 /* IMAAds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IMAAds.h; path = Video/IMAAds.h; sourceTree = "<group>"; };
+		61D591D6282FE74C00FDB613 /* MuxTracking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MuxTracking.m; path = Video/MuxTracking.m; sourceTree = "<group>"; };
 		61FA205A2808065B0011FC47 /* IMAAds.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = IMAAds.m; path = Video/IMAAds.m; sourceTree = "<group>"; };
-		61FA205B2808065B0011FC47 /* IMAAds.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = IMAAds.h; path = Video/IMAAds.h; sourceTree = "<group>"; };
-		61FA205C2808065B0011FC47 /* MuxTracking.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = MuxTracking.m; path = Video/MuxTracking.m; sourceTree = "<group>"; };
 		641E28441F0EEC8500443AF6 /* libRCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libRCTVideo.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		A489FD0E467405B32089DA3F /* Pods-RCTVideo.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RCTVideo.debug.xcconfig"; path = "Target Support Files/Pods-RCTVideo/Pods-RCTVideo.debug.xcconfig"; sourceTree = "<group>"; };
 		BED2677642446994E791650E /* libPods-RCTVideo.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-RCTVideo.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,7 +96,6 @@
 				A489FD0E467405B32089DA3F /* Pods-RCTVideo.debug.xcconfig */,
 				C8D64F8920E68E845D77C8E6 /* Pods-RCTVideo.release.xcconfig */,
 			);
-			name = Pods;
 			path = Pods;
 			sourceTree = "<group>";
 		};
@@ -110,10 +110,10 @@
 		58B511D21A9E6C8500147676 = {
 			isa = PBXGroup;
 			children = (
-				61FA205B2808065B0011FC47 /* IMAAds.h */,
+				61D591D5282FE74C00FDB613 /* IMAAds.h */,
+				61D591D4282FE74C00FDB613 /* MuxTracking.h */,
+				61D591D6282FE74C00FDB613 /* MuxTracking.m */,
 				61FA205A2808065B0011FC47 /* IMAAds.m */,
-				61FA20592808065B0011FC47 /* MuxTracking.h */,
-				61FA205C2808065B0011FC47 /* MuxTracking.m */,
 				D1107C072110259000073188 /* RCTVideo.h */,
 				D1107C052110259000073188 /* RCTVideo.m */,
 				D1107C092110259000073188 /* RCTVideoManager.h */,
@@ -240,7 +240,7 @@
 				D1107C102110259000073188 /* RCTVideoPlayerViewController.m in Sources */,
 				D1107C0E2110259000073188 /* RCTVideoManager.m in Sources */,
 				D1107C0C2110259000073188 /* RCTVideo.m in Sources */,
-				61FA205E2808065B0011FC47 /* MuxTracking.m in Sources */,
+				61D591D7282FE74C00FDB613 /* MuxTracking.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +251,7 @@
 				D1107C0B2110259000073188 /* UIView+FindUIViewController.m in Sources */,
 				D1107C112110259000073188 /* RCTVideoPlayerViewController.m in Sources */,
 				D1107C0F2110259000073188 /* RCTVideoManager.m in Sources */,
+				61D591D8282FE74C00FDB613 /* MuxTracking.m in Sources */,
 				D1107C0D2110259000073188 /* RCTVideo.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
