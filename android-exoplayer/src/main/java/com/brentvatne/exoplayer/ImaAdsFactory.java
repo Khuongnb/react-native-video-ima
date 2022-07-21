@@ -11,9 +11,11 @@ package com.brentvatne.exoplayer;
 */
 
 import android.content.Context;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.os.Handler;
 import android.os.Looper;
@@ -41,6 +43,8 @@ import com.google.android.exoplayer2.source.MediaSource;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.Callable;
 
 public class ImaAdsFactory implements
@@ -48,22 +52,24 @@ public class ImaAdsFactory implements
         AdErrorEvent.AdErrorListener,
         AdEvent.AdEventListener
 {
-    private AdsLoader _adsLoader;
-    private ImaSdkFactory _sdkFactory;
+    private final AdsLoader _adsLoader;
+    private final ImaSdkFactory _sdkFactory;
     private SimpleExoPlayer _player;
-    private VideoAdPlayer _videoAdPlayer;
+    private final VideoAdPlayer _videoAdPlayer;
     private AdsManager _adsManager;
     private AdMediaInfo _adMediaInfo;
     private Callable<MediaSource> _adMediaBuilder;
     private MediaSource _playerMediaSource;
-    private Player.EventListener _playerListenerForAd;
+    private final Player.EventListener _playerListenerForAd;
     private Player.EventListener _playerListener;
-    private List<VideoAdPlayer.VideoAdPlayerCallback> callbacks = new ArrayList<>(1);
+    private final List<VideoAdPlayer.VideoAdPlayerCallback> callbacks = new ArrayList<>(1);
     private int _savedWindowIndex;
     private long _savedPlayerPosition;
     private float _savedPlayerVolume;
-    private ViewGroup _parent;
-    private VideoEventEmitter _eventEmitter;
+    private final ViewGroup _parent;
+    private final VideoEventEmitter _eventEmitter;
+    private final ViewGroup _adUiContainer;
+    private int reMeasurementAdUiContainer = 0;
 
     private static final int AD_PROGRESS = 1;
     private final Handler progressHandler = new Handler(Looper.getMainLooper()) {
@@ -74,7 +80,6 @@ public class ImaAdsFactory implements
                     for (VideoAdPlayer.VideoAdPlayerCallback callback : callbacks) {
                         callback.onAdProgress(_adMediaInfo, _videoAdPlayer.getAdProgress());
                     }
-
                     msg = obtainMessage(AD_PROGRESS);
                     sendMessageDelayed(msg, 250);
                 }
@@ -89,14 +94,15 @@ public class ImaAdsFactory implements
         _sdkFactory = ImaSdkFactory.getInstance();
         _parent = parent;
         _eventEmitter = eventEmitter;
+        _adUiContainer = adUiContainer;
 
         ImaSdkSettings settings = _sdkFactory.createImaSdkSettings();
         settings.setPlayerType("ODVAdsPlayer");
         _videoAdPlayer = createVideoAdPlayer();
 
-        AdDisplayContainer adDisplayContainer = _sdkFactory.createAdDisplayContainer();
-        adDisplayContainer.setAdContainer(adUiContainer);
-        adDisplayContainer.setPlayer(_videoAdPlayer);
+        AdDisplayContainer adDisplayContainer = ImaSdkFactory.createAdDisplayContainer(
+                adUiContainer, _videoAdPlayer
+        );
 
         _adsLoader = _sdkFactory.createAdsLoader(context, settings, adDisplayContainer);
         _playerListenerForAd = createPlayerEventListener();
@@ -128,8 +134,8 @@ public class ImaAdsFactory implements
                 }
                 break;
             case "CONTENT_COMPLETE":
-                if (_adsLoader != null) {
-                    _adsLoader.contentComplete();
+                for (VideoAdPlayer.VideoAdPlayerCallback callback : callbacks) {
+                    callback.onContentComplete();
                 }
             default:
                 break;
@@ -144,18 +150,15 @@ public class ImaAdsFactory implements
         _playerListener = listener;
         _adMediaBuilder = adMediaBuilder;
         _playerMediaSource = playerMediaSource;
-
         _savedPlayerVolume = _player.getVolume();
     }
 
     public Uri getAdUri() {
         return Uri.parse(_adMediaInfo.getUrl());
     }
-    public AdsLoader getAdLoader() {
-        return _adsLoader;
-    }
 
     public void requestAdsAndStart(String adTag) {
+        reMeasurementAdUiContainer = 0;
         _adsLoader.addAdsLoadedListener(this);
         _adsLoader.addAdErrorListener(this);
         AdsRequest request = buildAdRequest(adTag);
@@ -174,7 +177,8 @@ public class ImaAdsFactory implements
             public void loadAd(AdMediaInfo adMediaInfo, AdPodInfo adPodInfo) {
                 _adMediaInfo = adMediaInfo;
                 try {
-                    _player.prepare(_adMediaBuilder.call());
+                    _player.setMediaSource(_adMediaBuilder.call());
+                    _player.prepare();
                 } catch (Exception e) {
                     System.out.println("Ads not ready");
                 }
@@ -199,6 +203,7 @@ public class ImaAdsFactory implements
             public void stopAd(AdMediaInfo adMediaInfo) {
                 _player.removeListener(_playerListenerForAd);
                 _player.addListener(_playerListener);
+                _adUiContainer.setBackgroundColor(Color.TRANSPARENT);
                 stopTracking();
             }
 
@@ -232,6 +237,29 @@ public class ImaAdsFactory implements
         };
     }
 
+    private void measureAdUiContainer() {
+        Timer timer = new Timer();
+        TimerTask task = new TimerTask() {
+            @Override
+            public void run() {
+                if (++reMeasurementAdUiContainer >= 3) {
+                    timer.cancel();
+                    return;
+                }
+
+                int mW = _adUiContainer.getMeasuredWidth();
+                int mH = _adUiContainer.getMeasuredHeight();
+
+                _adUiContainer.measure(
+                    View.MeasureSpec.makeMeasureSpec(mW, View.MeasureSpec.EXACTLY),
+                    View.MeasureSpec.makeMeasureSpec(mH, View.MeasureSpec.EXACTLY)
+                );
+                _adUiContainer.layout(0, 0, mW, mH);
+            }
+        };
+        timer.schedule(task, 1000, 1000);
+    }
+
     private void startTracking() {
         progressHandler.sendEmptyMessage(AD_PROGRESS);
     }
@@ -243,29 +271,34 @@ public class ImaAdsFactory implements
     private Player.EventListener createPlayerEventListener() {
         return new Player.EventListener() {
             @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+            public void onPlaybackStateChanged(int playbackState) {
                 switch (playbackState) {
-                    case Player.STATE_IDLE:
-                        break;
-                    case Player.STATE_BUFFERING:
-                        break;
-                    case Player.STATE_READY:
-                        for (VideoAdPlayer.VideoAdPlayerCallback callback: callbacks) {
-                            if (playWhenReady)
-                                callback.onResume(_adMediaInfo);
-                            else
-                                callback.onPause(_adMediaInfo);
-                        }
-                        break;
                     case Player.STATE_ENDED:
                         for (VideoAdPlayer.VideoAdPlayerCallback callback: callbacks) {
                             callback.onEnded(_adMediaInfo);
                         }
                         break;
+                    case Player.STATE_READY: {
+                        measureAdUiContainer();
+                        break;
+                    }
+                    case Player.STATE_BUFFERING:
+                    case Player.STATE_IDLE:
                     default:
                         break;
                 }
             }
+
+            @Override
+            public void onPlayWhenReadyChanged(boolean playWhenReady, int reason) {
+                for (VideoAdPlayer.VideoAdPlayerCallback callback: callbacks) {
+                    if (playWhenReady)
+                        callback.onResume(_adMediaInfo);
+                    else
+                        callback.onPause(_adMediaInfo);
+                }
+            }
+
         };
     }
 
@@ -351,7 +384,8 @@ public class ImaAdsFactory implements
                 break;
             case CONTENT_RESUME_REQUESTED:
                 try {
-                    _player.prepare(_playerMediaSource);
+                    _player.setMediaSource(_playerMediaSource);
+                    _player.prepare();
                     _player.seekTo(_savedWindowIndex, _savedPlayerPosition);
                     _player.setVolume(_savedPlayerVolume);
                 } catch (Exception e) {
@@ -359,7 +393,6 @@ public class ImaAdsFactory implements
                 }
                 break;
             case TAPPED:
-                break;
             default:
                 break;
         }

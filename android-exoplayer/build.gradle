@@ -43,10 +43,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:${OKHTTP_VERSION}'
 
     // Ads
-    implementation "com.google.ads.interactivemedia.v3:interactivemedia:3.14.0"
-    implementation('com.google.android.gms:play-services-ads:15.0.1') {
-        exclude group: 'com.android.support'
-    }
+    implementation "com.google.ads.interactivemedia.v3:interactivemedia:3.27.1"
 
     // Mux
     api 'com.mux.stats.sdk.muxstats:MuxExoPlayer_r2_13_1:2.6.0'
